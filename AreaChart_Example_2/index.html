@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+    <head>
+        <script src="https://d3js.org/d3.v6.js"></script>
+    </head>
+    <body>
+        
+        <script>
+       // set the dimensions and margins of the graph
+var margin = {top: 10, right: 30, bottom: 30, left: 50},
+    chartWidth = 460 - margin.left - margin.right,
+    chartHeight = 400 - margin.top - margin.bottom;
+
+// append the svg object to the body of the page
+var svg = d3.select("body")
+  .append("svg")
+    .attr("width", chartWidth + margin.left + margin.right)
+    .attr("height", chartHeight + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+//Read the data
+d3.csv("AreaChartData.csv") .then(function(data) {
+    
+   var parseTime = d3.timeParse("%Y-%m-%d")
+
+//make sure everything is a number
+    data.forEach(function (data){ 
+      data.value  = +data.value;
+      data.date = parseTime(data.date)
+    })
+    console.log(data);
+    // Add X axis --> it is a date format
+
+// Our axis requires a scale.
+// A scale is a function that takes a data value as an input 
+// and returns a value in pixels.
+  // Create a scale for your independent (x) coordinates
+  var xScale = d3.scaleTime()
+    .domain(d3.extent(data, d => d.date))
+    .range([0, chartWidth]);
+
+  // Create a scale for your dependent (y) coordinates
+  var yScale = d3.scaleLinear()
+    .domain([0, d3.max(data, d => d.value)])
+    .range([chartHeight, 0]);
+
+    //create axis
+//   Axis generators input scales and can be used with .call
+//   to append svg elements that will add an axis to your data
+//   visualization. Since we want to create a horizontal axis
+//   we will choose d3.axisBottom(scale). 
+//   Other options include d3.axisTop(scale), d3.axisRight(scale), and d3.axisLeft(scale).
+
+
+      // Add scales to axis
+   var x_axis = d3.axisBottom()
+      .scale(xScale)
+      .ticks(5)
+      .tickFormat(d3.timeFormat("%Y"))
+    //   .tickValues(data.map(d=>d.date));
+    
+ 
+
+    //Now you create a y_axis using d3.axisLeft() the scale should be set to yScale
+   var y_axis = d3.axisLeft()
+      .scale(yScale)
+      ;
+    //add the x_axis  
+    svg.append("g")
+    .attr("transform", `translate(${margin.left}, ${chartHeight})`)  
+    .call(x_axis)
+
+    //Add the y_axis (where should you translate it)
+    svg.append("g")
+    .attr("transform", `translate(${margin.left}, 0)`)  
+    .call(y_axis)
+
+
+
+    // Add the area
+    svg.append("path")
+      .attr("transform", `translate(${margin.left}, 0)`)  
+      .datum(data)
+      .attr("fill", "#cce5df")
+      .attr("stroke", "#69b3a2")
+      .attr("stroke-width", 1.5)
+      .attr("d", d3.area()
+        .x(function(d) { return xScale(d.date) })
+        .y0(chartHeight)
+        .y1(function(d) { return yScale(d.value) })
+        )
+
+})
+            
+        </script>
+    </body>
+</html>
